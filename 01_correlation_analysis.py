@@ -10,9 +10,11 @@ import os
 import gc
 
 # 檔案設定
-file_path = 'training.csv'
+# file_path = 'training.csv'
+file_path = "E:/Tbrain_stock_analysis/correlation_thr07_2nd/training_filtered.csv"
 total_rows = 200864
-total_cols = 10214
+# total_cols = 10214
+total_cols = 2911  # 這是經過篩選後的列數
 sample_size = 1000
 num_samples = 5
 target_column = "飆股"  # 目標變數名稱

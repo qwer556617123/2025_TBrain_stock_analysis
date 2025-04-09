@@ -101,7 +101,7 @@ def filter_correlated_features(
     print(f"將保留 {len(columns_to_keep)} 個特徵，包括目標變數 '{target_column}'")
     
     # 將要保留的列清單保存下來（便於後續使用和參考）
-    with open('kept_features.txt', 'w') as f:
+    with open('kept_features.txt', 'w', encoding='utf-8') as f:
         for col in columns_to_keep:
             f.write(f"{col}\n")
     
@@ -152,7 +152,7 @@ def filter_correlated_features(
     print(f"目標變數 '{target_column}' 已保留")
     
     # 保存移除的特徵清單（便於參考）
-    with open('removed_features.txt', 'w') as f:
+    with open('removed_features.txt', 'w', encoding='utf-8') as f:
         for col in sorted(features_to_remove):
             f.write(f"{col}\n")
     
@@ -161,8 +161,9 @@ def filter_correlated_features(
 if __name__ == "__main__":
     # 主執行程式
     filter_correlated_features(
-        original_csv_path='training.csv',                  # 原始大型CSV檔案
-        correlation_result_path='correlation_results/combined_correlation_analysis.csv',  # 相關性分析結果
+        # original_csv_path='training.csv',                  # 原始大型CSV檔案
+        original_csv_path="E:\\Tbrain_stock_analysis\\correlation_thr07_2nd\\training_filtered.csv",
+        correlation_result_path='correlation_results_3rd/combined_correlation_analysis.csv',  # 相關性分析結果
         output_csv_path='training_filtered.csv',           # 輸出檔案名稱
         target_column="飆股",                              # 目標變數名稱
         correlation_threshold=0.7,                         # 相關性閾值
