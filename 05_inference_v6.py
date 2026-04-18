@@ -12,7 +12,7 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.impute import SimpleImputer
 
 def load_model(name):
-    path = f"models/{name}_anomaly_stock_modelv5.pkl" if name != 'catboost' else f"models/{name}_anomaly_stock_modelv5.cbm"
+    path = f"models/{name}_anomaly_stock_modelv6.pkl" if name != 'catboost' else f"models/{name}_anomaly_stock_modelv6.cbm"
     if name == 'catboost':
         model = CatBoostClassifier()
         model.load_model(path)
@@ -43,16 +43,18 @@ def voting_predict(models, X, strategy='soft_avg', weights=None):
     else:
         raise ValueError("Unsupported voting strategy")
 
+def hybrid_predict(stacking_proba, soft_proba, alpha=0.5, threshold=0.75):
+    blended = alpha * stacking_proba + (1 - alpha) * soft_proba
+    return (blended >= threshold).astype(int)
+
 def main(test_csv, output_dir, strategy):
     df = pd.read_csv(test_csv)
     X = df.drop(columns=['ID'], errors='ignore')
     ids = df['ID'] if 'ID' in df.columns else pd.Series(range(len(df)))
 
-    # 填補缺失值
-    imputer = SimpleImputer(strategy='mean')  # 或使用 'median', 'most_frequent'
+    imputer = SimpleImputer(strategy='mean')
     X = pd.DataFrame(imputer.fit_transform(X), columns=X.columns)
 
-    # model_names = ['catboost', 'xgboost', 'lightgbm', 'easyensemble', 'balancedbagging']
     model_names = ['catboost', 'xgboost', 'lightgbm', 'easyensemble', 'balancedbagging', 'stacking']
     models = [load_model(name) for name in model_names]
 
@@ -60,8 +62,6 @@ def main(test_csv, output_dir, strategy):
     val_df = pd.read_csv('training_4o_cleaned.csv')
     X_val = val_df.drop(columns=['飆股', 'ID'], errors='ignore')
     y_val = val_df['飆股']
-
-    # 填補驗證資料中的缺失值
     X_val = pd.DataFrame(imputer.transform(X_val), columns=X_val.columns)
 
     with tempfile.TemporaryDirectory(dir="E:\\Tbrain_stock_analysis\\tmp_joblib") as temp_dir:
@@ -70,16 +70,42 @@ def main(test_csv, output_dir, strategy):
 
     os.makedirs(output_dir, exist_ok=True)
 
-    strategies = ['soft_avg', 'soft_weighted', 'hard_majority', 'hard_weighted'] if strategy == 'ensemble_all' else [strategy]
-    summary = []
+    # hybrid prediction
+    print("Running hybrid ensemble prediction...")
+    all_test_probas = [m.predict_proba(X)[:, 1] for m in models]
+    model_proba_dict = dict(zip(model_names, all_test_probas))
+    stacking_proba = model_proba_dict['stacking']
+    soft_model_names = [name for name in model_names if name != 'stacking']
+    soft_weights = [w for i, w in enumerate(weights) if model_names[i] != 'stacking']
+    soft_probs = [model_proba_dict[name] for name in soft_model_names]
+    soft_weighted_proba = np.average(soft_probs, axis=0, weights=soft_weights)
 
-    for strat in strategies:
-        preds = voting_predict(models, X, strategy=strat, weights=weights)
+    hybrid_preds = hybrid_predict(stacking_proba, soft_weighted_proba, alpha=0.5, threshold=0.5)
+
+    output_df = pd.DataFrame({
+        'ID': ids,
+        '飆股': hybrid_preds
+    })
+    out_path = os.path.join(output_dir, f'final_prediction_hybrid_20250422v6.csv')
+    output_df.to_csv(out_path, index=False)
+    print(f"Saved: {out_path}")
+
+    if '飆股' in df.columns:
+        f1 = f1_score(df['飆股'], hybrid_preds)
+        prec = precision_score(df['飆股'], hybrid_preds)
+        recall = recall_score(df['飆股'], hybrid_preds)
+        with open(os.path.join(output_dir, 'hybrid_report.txt'), 'w') as f:
+            f.write(f"Hybrid Ensemble\nF1 Score: {f1:.4f}\nPrecision: {prec:.4f}\nRecall: {recall:.4f}\n")
+        print(f"\nHybrid F1: {f1:.4f}, Precision: {prec:.4f}, Recall: {recall:.4f}")
+
+    # also run selected strategy from argparse
+    if strategy != 'ensemble_all':
+        preds = voting_predict(models, X, strategy=strategy, weights=weights)
         output_df = pd.DataFrame({
             'ID': ids,
             '飆股': preds
         })
-        out_path = os.path.join(output_dir, f'final_prediction_{strat}_20250421v5.csv')
+        out_path = os.path.join(output_dir, f'final_prediction_{strategy}_20250422v6.csv')
         output_df.to_csv(out_path, index=False)
         print(f"Saved: {out_path}")
 
@@ -87,16 +113,9 @@ def main(test_csv, output_dir, strategy):
             f1 = f1_score(df['飆股'], preds)
             prec = precision_score(df['飆股'], preds)
             recall = recall_score(df['飆股'], preds)
-            summary.append({'strategy': strat, 'f1_score': f1, 'precision': prec, 'recall': recall})
-
-    if summary:
-        report_df = pd.DataFrame(summary).sort_values(by='f1_score', ascending=False)
-        report_df.to_csv(os.path.join(output_dir, 'ensemble_report.csv'), index=False)
-        best = report_df.iloc[0]
-        with open(os.path.join(output_dir, 'best_strategy_20250421v5.txt'), 'w') as f:
-            f.write(f"Best Strategy: {best['strategy']}\nF1 Score: {best['f1_score']:.4f}\n")
-        print("\n=== Ensemble Report ===")
-        print(report_df)
+            with open(os.path.join(output_dir, f'{strategy}_report.txt'), 'w') as f:
+                f.write(f"Strategy: {strategy}\nF1 Score: {f1:.4f}\nPrecision: {prec:.4f}\nRecall: {recall:.4f}\n")
+            print(f"\n{strategy} F1: {f1:.4f}, Precision: {prec:.4f}, Recall: {recall:.4f}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
