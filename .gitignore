@@ -1,15 +1,87 @@
-/correlation_results
-/correlation_results_1st
-/correlation_results_2nd
-/correlation_results_3rd
-/correlation_thr07_1st
-/correlation_thr07_2nd
-/correlation_thr07_3rd
-/2025永豐AI GO競賽_Slack Link_V3.pdf
+# ─────────────────────────────────────────────
+# 競賽原始資料（不得公開）
+# ─────────────────────────────────────────────
 /38_Training_Data_Set_V2.zip
-/38_Public_Test_Set_and_Submmision_Template_V2
+/38_Public_Test_Set_and_Submmision_Template_V2/
 /38_Public_Test_Set_and_Submmision_Template_V2.zip
-/output
-/models
+/38_Private_Test_Set_and_Submission_Template_V2/
+/38_Private_Test_Set_and_Submission_Template_V2.zip
+
+# 競賽文件（含非公開連結）
+/2025永豐AI GO競賽_Slack Link_V3.pdf
+
+# ─────────────────────────────────────────────
+# 模型權重／Binary（體積大，不 commit）
+# ─────────────────────────────────────────────
+/models/
+/models_20250410/
+*.pkl
+*.cbm
+*.pth
+
+# GAN 訓練輸出子目錄（保留 .py，排除實驗輸出）
+/GAN/fed_*/
+/GAN/models/
+/GAN/__pycache__/
+
+# ─────────────────────────────────────────────
+# 大型 / 衍生資料集
+# ─────────────────────────────────────────────
 /*.csv
+/sample_pool/
+/try/*.csv
+
+# ─────────────────────────────────────────────
+# 相關性分析中間結果
+# ─────────────────────────────────────────────
+/correlation_results/
+/correlation_results_1st/
+/correlation_results_2nd/
+/correlation_results_3rd/
+/correlation_thr07_1st/
+/correlation_thr07_2nd/
+/correlation_thr07_3rd/
+
+# ─────────────────────────────────────────────
+# 實驗 / 推論輸出
+# ─────────────────────────────────────────────
+/outputs/
+/results/
+/reports/
+/val_proba/
+/val_proba_v6/
+/PyCaret/
+/catboost_info/
+/tmp_joblib/
+
+# ─────────────────────────────────────────────
+# 特徵清單（競賽資料衍生物）
+# ─────────────────────────────────────────────
 /*.txt
+/try/*.txt
+
+# ─────────────────────────────────────────────
+# Python 快取
+# ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 數值陣列
+*.npy
+*.npz
+
+# 日誌
+*.log
+
+# ─────────────────────────────────────────────
+# 編輯器 / 系統雜項
+# ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.env
+.venv/
+venv/
+*.egg-info/
