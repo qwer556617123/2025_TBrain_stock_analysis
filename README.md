@@ -1,6 +1,6 @@
 # 2025 T-Brain 股票飆股預測競賽
 
-> **競賽**：[2025 永豐 AI GO – 股票飆股預測](https://tbrain.trendmicro.com.tw/)  
+> **競賽**：[2025 永豐 AI GO – 股票飆股預測](https://tbrain.trendmicro.com.tw/Competitions/Details/38)  
 > **任務**：二元分類（飆股 / 非飆股）  
 > **最終成績**：Private Leaderboard **86 / 868**  
 > **評估指標**：F1-score
